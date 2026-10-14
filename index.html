@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parij viktorinasi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600;1,700&family=Jost:wght@400;500;600&display=swap">
+<style>
+:root{--plum:#2b1538;--rose:#ff7a95;--gold:#ffd89a;--cream:#fff4ea;--sil:#1d0f2a;--glass:rgba(255,216,154,.18);--water:#4a2a63;--shirt:#e8566f;--skin:#f1c3a0;--card:rgba(30,12,44,.8);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--plum);color:var(--cream);font:17px/1.4 Jost,system-ui,sans-serif;overflow-x:hidden}
+#sky{position:fixed;inset:0;z-index:0;background:linear-gradient(#2a1b5c,#8d4a9e 50%,#ff9a76)}
+#sky::after{content:"";position:absolute;inset:0;opacity:.7;background-image:radial-gradient(1.5px 1.5px at 12% 10%,#fff,transparent),radial-gradient(1px 1px at 30% 22%,#fff,transparent),radial-gradient(1.5px 1.5px at 55% 8%,#fff,transparent),radial-gradient(1px 1px at 72% 18%,#fff,transparent),radial-gradient(1.5px 1.5px at 90% 12%,#fff,transparent),radial-gradient(1px 1px at 42% 30%,#fff,transparent)}
+#scene{position:fixed;left:0;right:0;bottom:0;width:100%;height:54vh;overflow:visible;z-index:1}
+#ui{position:relative;z-index:2;display:flex;justify-content:center;padding:20px 16px}
+.card{width:100%;max-width:440px;background:var(--card);border:1px solid rgba(255,216,154,.28);border-radius:20px;padding:20px}
+h1,h2{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:700;margin:0 0 14px;line-height:1.15}
+h1{font-size:44px}h2{font-size:28px}h2.big{font-size:34px;text-align:center}
+p{margin:0 0 16px}.sm{text-align:center;color:var(--gold)}
+.top{display:flex;justify-content:space-between;color:var(--gold);font-weight:500}
+.bar{height:4px;background:rgba(255,244,234,.15);border-radius:4px;margin:8px 0 18px}
+.bar i{display:block;height:100%;background:var(--rose);border-radius:4px;transition:width .4s}
+.opts{display:grid;gap:10px}
+.opt,.btn{font:inherit;color:var(--cream);cursor:pointer;border-radius:14px;padding:14px 16px;text-align:left;background:rgba(255,244,234,.1);border:1px solid rgba(255,216,154,.4)}
+.opt:disabled{cursor:default;color:var(--cream)}
+.opt.ok{background:rgba(110,220,150,.3);border-color:#8be8ae}
+.opt.bad{background:rgba(255,90,110,.32);border-color:var(--rose);animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.btn{background:var(--rose);border-color:var(--rose);color:#3a0f22;font-weight:600;text-align:center;padding:14px 28px}
+.btn.ghost{background:rgba(255,244,234,.12);border-color:rgba(255,244,234,.5);color:var(--cream)}
+.row{display:flex;gap:14px;justify-content:center;align-items:center}
+.slot{display:inline-block}
+#no.fly{position:fixed;z-index:9;transition:left .18s ease-out,top .18s ease-out}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.cf{position:fixed;top:-30px;color:var(--rose);z-index:5;pointer-events:none;animation:fall 3.4s linear forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(360deg)}}
+.hh{animation:pulse 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{50%{transform:scale(1.35)}}
+.bl{transform-box:view-box;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#mu{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:9;width:44px;height:44px;border-radius:50%;font-size:20px;color:var(--cream);background:var(--card);border:1px solid rgba(255,216,154,.4);cursor:pointer}
+.credit{margin:14px 0 0;text-align:center;font-size:14px;color:var(--gold);opacity:.85}
+@media (prefers-reduced-motion:reduce){.hh,.bl,.cf{animation:none}}
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<svg id="scene" viewBox="0 0 400 260" preserveAspectRatio="xMidYMax meet" aria-hidden="true"></svg>
+<button id="mu" hidden aria-label="Musiqani yoqish yoki o'chirish">🔊</button>
+<main id="ui"></main>
+<script>
+const $=s=>document.querySelector(s),ui=$('#ui'),sc=$('#scene'),sky=$('#sky');
+const K=["linear-gradient(#ffb4a2,#f78fb3 45%,#7b4ea3)","linear-gradient(#2a1b5c,#8d4a9e 50%,#ff9a76)","linear-gradient(#0e0a2e,#2b1b5e 60%,#6b3a8e)","linear-gradient(#6c5ce7,#d58be0 55%,#ffd0a8)","linear-gradient(#3b1f5e,#c2527c 60%,#ffc58a)"];
+const BASE='<circle cx="330" cy="55" r="16" fill="var(--gold)" opacity=".85"/><rect x="-1000" y="258" width="2400" height="400" fill="var(--sil)"/>';
+const E=t=>`<g fill="var(--sil)" transform="${t}"><rect x="199" y="12" width="2" height="38"/><path d="M200 48L210 120L222 200L246 260H230L214 215Q200 205 186 215L170 260H154L178 200L190 120Z"/><rect x="184" y="116" width="32" height="6"/><rect x="168" y="196" width="64" height="7"/></g>`;
+const S=[
+E('translate(0 0)'),
+'<g fill="var(--sil)"><rect x="120" y="110" width="50" height="150"/><rect x="230" y="110" width="50" height="150"/><rect x="170" y="140" width="60" height="120"/><path d="M190 140l10-55 10 55z"/></g><circle cx="200" cy="178" r="14" fill="var(--gold)" opacity=".85"/><g fill="var(--gold)"><rect x="140" y="130" width="10" height="22" rx="5"/><rect x="250" y="130" width="10" height="22" rx="5"/></g>',
+'<path fill="var(--sil)" fill-rule="evenodd" d="M130 90h140v170H130zM182 260V170a18 18 0 0 1 36 0V260z"/><rect x="120" y="80" width="160" height="14" fill="var(--sil)"/><rect x="150" y="104" width="100" height="6" fill="var(--gold)" opacity=".5"/>',
+'<g fill="var(--sil)"><rect x="-20" y="170" width="130" height="90"/><rect x="290" y="170" width="130" height="90"/></g><path d="M200 120L295 260H105z" fill="var(--glass)" stroke="var(--gold)" stroke-width="1.5"/><path d="M200 120V260M152 190H248M176 155L152 260M224 155L248 260" stroke="var(--gold)" stroke-width="1" opacity=".7" fill="none"/>',
+'<g fill="var(--sil)"><path d="M160 260v-70q0-50 40-65 40 15 40 65v70z"/><path d="M105 260v-50q0-30 25-40 25 10 25 40v50z"/><path d="M245 260v-50q0-30 25-40 25 10 25 40v50z"/><rect x="199" y="98" width="2" height="28"/></g><g fill="var(--gold)" opacity=".8"><rect x="192" y="200" width="16" height="26" rx="8"/></g>',
+'<rect y="235" width="400" height="25" fill="var(--water)"/><path d="M60 250h40M200 246h60M310 252h50" stroke="var(--gold)" stroke-width="2" opacity=".5"/>'+E('translate(-70 60) scale(.55)')+'<path fill="var(--sil)" fill-rule="evenodd" d="M-20 190h440v70H-20zM30 260V240a40 40 0 0 1 80 0V260zM160 260V240a40 40 0 0 1 80 0V260zM290 260V240a40 40 0 0 1 80 0V260z"/>',
+'<rect x="130" y="150" width="140" height="110" fill="var(--sil)"/><path d="M185 150l5-38h20l5 38z" fill="var(--sil)"/><g class="bl" style="transform-origin:200px 105px"><rect x="196" y="68" width="8" height="74" fill="#e63950"/><rect x="163" y="101" width="74" height="8" fill="#e63950"/></g><rect x="140" y="190" width="120" height="6" fill="#ff3d5a"/><g fill="var(--gold)"><rect x="150" y="165" width="12" height="14"/><rect x="238" y="165" width="12" height="14"/></g>'
+];
+const Q=[
+["Parij qaysi davlatning poytaxti?",["Italiya","Fransiya","Belgiya"],1,0],
+["Eyfel minorasi qaysi yili qurib bitkazilgan?",["1789","1925","1889"],2,0],
+["Parij o'rtasidan qaysi daryo oqib o'tadi?",["Sena","Reyn","Dunay"],0,5],
+["Luvr muzeyidagi eng mashhur asar qaysi?",["Yulduzli tun","Mona Liza","Qichqiriq"],1,3],
+["Parijning mashhur laqabi qaysi?",["Oltin shahar","Nur shahri","Qizil shahar"],1,0],
+["Triumf archasi qaysi maydonda turadi?",["Konkord","Vendom","Sharl de Goll"],2,2],
+["Notr-Dam sobori qaysi orolda joylashgan?",["Site oroli","Korsika","Sent-Lui oroli"],0,1],
+["Fransuzcha «Merci» so'zi nimani anglatadi?",["Kechirasiz","Salom","Rahmat"],2,4],
+["Fransiyaning ramziga aylangan uzun non qanday ataladi?",["Bagyet","Chabatta","Lavash"],0,5],
+["Eyfel minorasining balandligi taxminan qancha?",["130 metr","330 metr","530 metr"],1,0],
+["Qizil tegirmonli mashhur kabare nomi qanday?",["Mulen Ruj","Folli Berjer","Opera Garnye"],0,6],
+["Monmartr tepaligidagi oq sobor qaysi?",["Madlen","Sakre-Ker","Panteon"],1,4],
+["Luvr oldidagi shisha piramidani kim loyihalagan?",["Gustav Eyfel","Pablo Pikasso","Yo Ming Pei"],2,3],
+["Fransuzlarning nonushtadagi yarim oy shaklli noni?",["Kruassan","Bublik","Pitsa"],0,1],
+["Sevishganlar muhabbat qulfini osadigan mashhur ko'prik?",["Rialto","Art ko'prigi","Bruklin"],1,5]
+];
+const guy=`<g transform="translate(-35 0)"><rect x="76" y="215" width="16" height="45" rx="4" fill="var(--sil)"/><rect x="98" y="215" width="16" height="45" rx="4" fill="var(--sil)"/><path d="M75 153h40l7 64H68z" fill="var(--shirt)"/><path d="M77 160L68 208" stroke="var(--shirt)" stroke-width="11" stroke-linecap="round"/><circle cx="67" cy="212" r="5" fill="var(--skin)"/><path d="M113 160L172 148" stroke="var(--shirt)" stroke-width="11" stroke-linecap="round"/><circle cx="178" cy="147" r="7" fill="var(--skin)"/><path d="M182 143l8-3M183 147h9M182 151l8 3" stroke="var(--skin)" stroke-width="3" stroke-linecap="round"/><rect x="90" y="147" width="10" height="9" fill="var(--skin)"/><circle cx="95" cy="135" r="16" fill="var(--skin)"/><path d="M79 134a16 16 0 0 1 32 0q-16-10-32 0z" fill="var(--sil)"/><text x="95" y="192" text-anchor="middle" font-size="30" font-weight="700" fill="#fff" font-family="Jost,sans-serif">T</text><text class="hh" x="186" y="122" font-size="20" fill="var(--rose)">♥</text></g>`;
+let AC,MG,mOn=0,mT;
+const hz=m=>440*2**((m-69)/12);
+function note(m,t,d,v,k){
+ const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();
+ f.type='lowpass';f.frequency.value=k?1700:2400;
+ o.type=k?'sawtooth':'triangle';o.frequency.value=hz(m);
+ if(k){const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=5;lg.gain.value=5;l.connect(lg);lg.connect(o.detune);l.start(t);l.stop(t+d+.1)}
+ g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+(k?.08:.015));g.gain.exponentialRampToValueAtTime(.0001,t+d);
+ o.connect(f);f.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);
+}
+const CH=[[57,60,64,69],[50,62,65,69],[52,59,62,68],[57,60,64,69],[53,60,65,69],[50,62,65,69],[52,59,62,68],[57,60,64,69]];
+const ML=[[76,2],[72,1],[74,1.5],[77,.5],[74,1],[76,2],[68,1],[69,3],[72,2],[69,1],[74,1.5],[72,.5],[69,1],[71,1.5],[68,.5],[71,1],[69,3]];
+function loop(t0){
+ const b=.62;
+ CH.forEach((c,k)=>{const t=t0+k*3*b;note(c[0],t,2,.22);[1,2].forEach(j=>c.slice(1).forEach((m,x)=>note(m,t+j*b+x*.02,b*1.3,.07)))});
+ let t=t0;ML.forEach(([m,d])=>{note(m,t,d*b*.95,.11,1);note(m+12,t,d*b*.9,.025);t+=d*b});
+ mT=setTimeout(()=>loop(t0+24*b),(24*b-1.2)*1000);
+}
+function music(){
+ if(!AC){
+  AC=new (window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=.9;
+  const d=AC.createDelay(),fb=AC.createGain(),w=AC.createGain();d.delayTime.value=.34;fb.gain.value=.38;w.gain.value=.35;
+  MG.connect(AC.destination);MG.connect(d);d.connect(fb);fb.connect(d);d.connect(w);w.connect(AC.destination);
+  mOn=1;loop(AC.currentTime+.1);$('#mu').hidden=false;
+ }else AC.resume();
+}
+$('#mu').onclick=()=>{mOn=!mOn;MG.gain.value=mOn?.9:0;$('#mu').textContent=mOn?'🔊':'🔇'};
+const duo=`<circle cx="215" cy="75" r="52" fill="var(--gold)" opacity=".15"/><circle cx="215" cy="75" r="38" fill="var(--gold)"/><circle cx="203" cy="66" r="6" fill="#f3c986" opacity=".6"/><circle cx="224" cy="88" r="4" fill="#f3c986" opacity=".6"/><g fill="#fff"><circle cx="50" cy="40" r="1.2"/><circle cx="90" cy="25" r="1"/><circle cx="150" cy="35" r="1.3"/><circle cx="250" cy="130" r="1"/><circle cx="35" cy="110" r="1"/></g><g fill="var(--sil)"><rect x="119" y="22" width="2" height="40"/><path d="M120 60L128 120L138 172H102L112 120Z"/><rect x="108" y="116" width="24" height="5"/><rect x="40" y="172" width="180" height="8"/><path d="M64 180H176L212 262H190L168 226Q120 208 72 226L50 262H28Z"/><path d="M40 167H220" stroke="var(--sil)" stroke-width="10" stroke-dasharray="1.5 6"/></g><g transform="translate(175 172) scale(1.6)"><g fill="var(--sil)"><circle cx="-9" cy="-52" r="6"/><path d="M-16 -44Q-9 -47-2 -44L-1 -20H-17Z"/><rect x="-16" y="-20" width="6" height="20"/><rect x="-9" y="-20" width="6" height="20"/><circle cx="1" cy="-48" r="5.5"/><path d="M-5 -48a6 6 0 0 1 12 0v14q-6 4-12 0z"/><path d="M3 -42Q8 -44 12 -41L18 -2H0Z"/></g><path d="M-3 -41L12 -34M11 -40L15 -27" stroke="var(--sil)" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M17 -20L16 -12" stroke="#4fa36b" stroke-width="1.6"/><circle cx="15" cy="-26" r="4.5" fill="#ff9fb7"/><circle cx="21" cy="-23" r="4" fill="#ff7a95"/><circle cx="16" cy="-20" r="4" fill="#ffc2d1"/><g fill="#e8456f"><circle cx="15" cy="-26" r="1.6"/><circle cx="21" cy="-23" r="1.4"/><circle cx="16" cy="-20" r="1.4"/></g></g>`;
+let i=0,score=0;
+function start(){
+ i=score=0;sky.style.background=K[2];sc.setAttribute('viewBox','0 0 400 260');sc.innerHTML=BASE+S[0];
+ ui.innerHTML='<section class="card"><h1>Parij viktorinasi</h1><p>15 ta savol. Ko\'pini topsang, senga bitta maxsus savolim bor.</p><button class="btn" id="go">Boshlash</button></section>';
+ $('#go').onclick=()=>{music();ask()};
+}
+function ask(){
+ const [t,o,a,s]=Q[i];
+ sky.style.background=K[i%5];sc.setAttribute('viewBox','0 0 400 260');sc.innerHTML=BASE+S[s];
+ ui.innerHTML=`<section class="card"><div class="top"><span>${i+1} / 15</span><span>♥ ${score}</span></div><div class="bar"><i style="width:${i/15*100}%"></i></div><h2>${t}</h2><div class="opts">${o.map((x,k)=>`<button class="opt" data-k="${k}">${x}</button>`).join('')}</div></section>`;
+ ui.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(b,a));
+}
+function pick(b,a){
+ const bs=ui.querySelectorAll('.opt');bs.forEach(x=>x.disabled=true);
+ if(+b.dataset.k===a){score++;b.classList.add('ok')}else{b.classList.add('bad');bs[a].classList.add('ok')}
+ setTimeout(()=>{++i<15?ask():end()},1300);
+}
+function end(){
+ if(score>=10)return final();
+ sky.style.background=K[2];
+ ui.innerHTML=`<section class="card"><h2>${score} / 15</h2><p>Biroz yetmadi. Yana bir urinib ko'r, Parij kutadi.</p><button class="btn" id="again">Qayta boshlash</button></section>`;
+ $('#again').onclick=start;
+}
+function final(){
+ sky.style.background=K[1];sc.setAttribute('viewBox','0 0 300 262');sc.innerHTML='<rect x="-1000" y="258" width="2400" height="400" fill="var(--sil)"/>'+E('translate(10 0)')+guy;
+ ui.innerHTML=`<section class="card"><p class="sm">Sen yutding: ${score} / 15 ♥</p><h2 class="big">Men bilan Parijga borasanmi?</h2><div class="row"><button class="btn" id="yes">Ha ♥</button><span class="slot" id="slot"><button class="btn ghost" id="no">Yo'q</button></span></div></section>`;
+ const no=$('#no'),yes=$('#yes'),slot=$('#slot');
+ function dodge(e){
+  if(e&&e.cancelable)e.preventDefault();
+  if(!no.classList.contains('fly')){const r=no.getBoundingClientRect();slot.style.width=r.width+'px';slot.style.height=r.height+'px';no.classList.add('fly');no.style.left=r.left+'px';no.style.top=r.top+'px';}
+  const w=no.offsetWidth,h=no.offsetHeight,yb=yes.getBoundingClientRect();
+  let x,y,n=0;
+  do{x=8+Math.random()*(innerWidth-w-16);y=8+Math.random()*(innerHeight-h-16);n++}
+  while(n<40&&x<yb.right+24&&x+w>yb.left-24&&y<yb.bottom+24&&y+h>yb.top-24);
+  no.style.left=x+'px';no.style.top=y+'px';
+ }
+ ['pointerenter','pointerdown','touchstart','click','focus'].forEach(ev=>no.addEventListener(ev,dodge,{passive:false}));
+ document.addEventListener('pointermove',e=>{
+  if(!document.body.contains(no))return;
+  const r=no.getBoundingClientRect();
+  if(Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2))<80)dodge();
+ });
+ yes.onclick=()=>{
+  sky.style.background='linear-gradient(#1c1450,#6b3a8e 55%,#e08aa6)';sc.setAttribute('viewBox','20 10 240 252');sc.innerHTML=duo;
+  $('.card').innerHTML='<h2 class="big">Seni shunchaki sevmayman ♥</h2><p class="sm">Parij bizni kutyapti.</p><p class="credit">Ishlab chiqdi: Tohir</p>';
+  for(let n=0;n<40;n++){const h=document.createElement('span');h.className='cf';h.textContent='♥';h.style.cssText=`left:${Math.random()*100}vw;animation-delay:${Math.random()*1.5}s;font-size:${14+Math.random()*22}px`;document.body.appendChild(h);setTimeout(()=>h.remove(),5200)}
+ };
+}
+start();
+</script>
+</body>
+</html>
